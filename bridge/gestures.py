@@ -31,7 +31,7 @@ class ConsoleSource:
     """Type commands instead of using the camera (like phone_app.py in Lab 3).
 
         l = swipe_left   r = swipe_right   h = raise_hand   c = cross_arms   x = unknown gesture
-        m1 .. m4 = place marker 1..4 (any number works, e.g. m9 = unknown marker)     q = quit
+        m1 .. m4 = place marker 1..5 (any number works, e.g. m9 = unknown marker)     q = quit
     """
     GESTURE_KEYS = {"l": "swipe_left", "r": "swipe_right", "h": "raise_hand",
                     "c": "cross_arms", "x": "unknown"}
@@ -44,7 +44,7 @@ class ConsoleSource:
 
     def _loop(self):
         print("Console: l/r = swipe left/right, h = raise hand, c = cross arms, "
-              "x = unknown gesture, m1..m4 = marker, q = quit")
+              "x = unknown gesture, m1..m5 = marker, q = quit")
         while True:
             try:
                 text = input().strip().lower()
@@ -58,4 +58,4 @@ class ConsoleSource:
             elif text.startswith("m") and text[1:].isdigit():
                 self.publish("marker", text[1:])
             elif text:
-                print("   ? try l, r, h, c, x, m1..m4, q")
+                print("   ? try l, r, h, c, x, m1..m5, q")

@@ -8,6 +8,7 @@ Python <-> Java bridge for the Museum Ticket Kiosk.
 
 Message format (one per line, matches Main/MainFrame on the Java side):
     marker:<id>          e.g. marker:2
+    notice:<text>        e.g. notice:Wheelchairs are available.   (sent right after the marker)
     gesture:<name>       e.g. gesture:swipe_left
 
 Run order:  1) reacTIVision   2) Java app   3) python bridge.py
@@ -18,7 +19,7 @@ import time
 
 from gestures import ConsoleSource, normalize
 from socket_client import SocketClient
-from tuio_markers import TuioMarkerSource
+from tuio_markers import TuioMarkerSource, notice_for
 
 
 class MessageStream:
@@ -38,6 +39,10 @@ class MessageStream:
                 return                                  # same gesture fired twice in a row: one gesture
             self.last_gesture = (value, now)
         self.client.send(f"{kind}:{value}")
+        if kind == "marker":                            # same path for camera markers and typed m1..m5
+            text = notice_for(value)
+            if text:
+                self.client.send(f"notice:{text}")
 
 
 def main():

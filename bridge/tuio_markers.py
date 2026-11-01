@@ -22,7 +22,38 @@ TICKET_TYPES = {
     2: "Student",
     3: "Foreign Adult",
     4: "Child",
+    5: "Elderly",
 }
+
+# WHICH PHYSICAL MARKER IS WHICH TICKET.  <printed marker ID>: <ticket ID 1-5>
+# 1 Egyptian Adult, 2 Student, 3 Foreign Adult, 4 Child, 5 Elderly.
+# Put the IDs of the markers you actually have here (the bridge prints the ID when you show one).
+MARKER_MAP = {
+    11: 1,
+    0: 2,
+}
+
+# Notice shown on the kiosk when a marker is placed (sent as "notice:<text>").
+# Keep the text on ONE line. Change the wording here, nothing else needs touching.
+NOTICE_WHEELCHAIRS = "Wheelchairs are available."
+NOTICE_CHILDREN = "5odo balko mn 3yalko"
+NOTICE_ITEMS = "Please take care of your items."
+
+NOTICES = {
+    1: NOTICE_ITEMS,          # Egyptian Adult
+    2: NOTICE_ITEMS,          # Student
+    3: NOTICE_ITEMS,          # Foreign Adult
+    4: NOTICE_CHILDREN,       # Child
+    5: NOTICE_WHEELCHAIRS,    # Elderly
+}
+
+
+def notice_for(marker_id):
+    """Notice text for a marker ID, or None (unknown markers get no notice)."""
+    try:
+        return NOTICES.get(int(marker_id))
+    except (TypeError, ValueError):
+        return None
 
 
 # ---------- minimal OSC parser (what OSC.NET did in Lab 3) ----------
@@ -119,9 +150,10 @@ class TuioMarkerSource(threading.Thread):
         if now - self.last_fired.get(marker_id, 0) < self.cooldown:
             return                                       # lost-and-found flicker, not a new card
         self.last_fired[marker_id] = now
-        ticket = TICKET_TYPES.get(marker_id)
+        ticket_id = MARKER_MAP.get(marker_id, marker_id)     # printed marker -> ticket ID the kiosk knows
+        ticket = TICKET_TYPES.get(ticket_id)
         if ticket:
             print(f"[TUIO] marker {marker_id} placed -> {ticket}")
         else:
-            print(f"[TUIO] marker {marker_id} placed -> no ticket type (Java will show an error)")
-        self.publish("marker", str(marker_id))
+            print(f"[TUIO] marker {marker_id} placed -> no ticket type (add it to MARKER_MAP)")
+        self.publish("marker", str(ticket_id))

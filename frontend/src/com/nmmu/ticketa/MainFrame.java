@@ -211,6 +211,9 @@ public class MainFrame extends JFrame {
                 + date + " at " + time + "<br><br>Ticket code: <font color='blue'>" + code + "</font></center></html>");
 
         saveTicket(code, date, time);
+        if (ScanStation.instance != null) {
+            ScanStation.instance.ticketPrinted(code, ticket.name);
+        }
         show("SUMMARY");
 
         stopTimer();
