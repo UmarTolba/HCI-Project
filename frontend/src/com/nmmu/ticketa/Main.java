@@ -13,7 +13,10 @@ public class Main {
             NoticeBanner banner = new NoticeBanner(frame);
             ScanStation station = new ScanStation(frame);
             ScanStation.instance = station;
-            Runtime.getRuntime().addShutdownHook(new Thread(station::stopCamera));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                station.stopCamera();
+                frame.stopGestureRecognizer();
+            }));
 
             SocketServer server = new SocketServer(5000, (type, value) -> SwingUtilities.invokeLater(() -> {
                 if (type.equals("notice")) {
