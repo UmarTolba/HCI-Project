@@ -37,7 +37,7 @@ PORT = 5000
 CAMERA_INDEX = 0
 FLIP_CAMERA = False           # True if the kiosk camera is mirrored vs training
 
-RECOGNIZE_EVERY = 0.3         # seconds between recognitions
+RECOGNIZE_EVERY = 0.1        # seconds between recognitions
 CONFIRMATIONS = 2             # same label this many times in a row
 LIVE_MIN_MARGIN = 0.3         # best class must beat the runner-up by this
 LIVE_MIN_MOTION = 0.8         # wrist travel in shoulder widths
