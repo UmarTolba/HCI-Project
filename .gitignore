@@ -2,3 +2,5 @@ tickets.txt
 __pycache__/
 frontend/out/
 frontend/tickets.txt
+.idea
+HCI-Project.iml
