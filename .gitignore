@@ -1,4 +1,11 @@
 tickets.txt
+_pycache_/
+frontend/out/
+frontend/tickets.txt
+.idea
+HCI-Project.iml
+.venv
+.venv312
 __pycache__/
 frontend/out/
 frontend/tickets.txt
