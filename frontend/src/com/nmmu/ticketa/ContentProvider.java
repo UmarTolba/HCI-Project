@@ -17,16 +17,13 @@ public class ContentProvider {
                 return new Ticket("Foreign Adult", "Price: 600 EGP", "Photography rules apply inside the galleries");
             case 4:
                 return new Ticket("Child", "Price: 30 EGP", "A guardian must enter with the child");
+
+            case 5:
+                return new Ticket("Elderly", "Price: 50 EGP", "Show your ID at the entrance");
             default:
                 return null;
         }
-        if (markerId == 4) {
-            return new Ticket("Child", "Price: 30 EGP", "A guardian must enter with the child");
-        }
-        if (markerId == 5) {
-            return new Ticket("Elderly", "Price: 50 EGP", "Show your ID at the entrance");
-        }
-        return null;
+
     }
 
     public static String getQueueHint() {
