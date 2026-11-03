@@ -29,6 +29,10 @@ public class MainFrame extends JFrame {
     Ticket ticket;
     int dateIndex = 0;
     int slotIndex = 0;
+    int typeIndex = 0;                    // highlighted ticket type on the start screen (0 = ticket 1)
+    boolean cameraReady = false;          // the gesture camera reports "status:gesture_ready"
+    String cameraProblem = null;          // set when the camera / Python could not start
+    static final int TYPE_COUNT = 5;      // ticket types 1..5 in ContentProvider
     Timer timer;
 
     public MainFrame() {
@@ -37,8 +41,6 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        startLabel.setText("<html><center>Show your ticket marker to the camera<br><br>"
-                + "1 Egyptian Adult &nbsp; 2 Student &nbsp; 3 Foreign Adult &nbsp; 4 Child</center></html>");
         errorLabel.setForeground(new Color(160, 0, 0));
 
         root.add(startLabel, "START");
@@ -69,6 +71,7 @@ public class MainFrame extends JFrame {
         if (key == KeyEvent.VK_2) handle("marker", "2");
         if (key == KeyEvent.VK_3) handle("marker", "3");
         if (key == KeyEvent.VK_4) handle("marker", "4");
+        if (key == KeyEvent.VK_5) handle("marker", "5");
         if (key == KeyEvent.VK_LEFT) handle("gesture", "swipe_left");
         if (key == KeyEvent.VK_RIGHT) handle("gesture", "swipe_right");
         if (key == KeyEvent.VK_ENTER) handle("gesture", "raise_hand");
@@ -77,6 +80,19 @@ public class MainFrame extends JFrame {
     }
 
     public void handle(String type, String value) {
+        if (type.equals("status")) {
+            if (value.equals("gesture_ready")) {
+                cameraReady = true;
+                cameraProblem = null;
+            } else if (value.startsWith("problem:")) {
+                cameraReady = false;
+                cameraProblem = value.substring("problem:".length());
+            }
+            if (screen.equals("START")) {
+                showStartScreen();
+            }
+            return;
+        }
         if (screen.equals("ERROR")) {
             return;
         }
@@ -110,6 +126,12 @@ public class MainFrame extends JFrame {
     }
 
     void onGesture(String gesture) {
+        if (screen.equals("SUMMARY")) {               // booking is done: only "cross arms" (start over) matters
+            if (gesture.equals("cross_arms")) {
+                goToStart();
+            }
+            return;
+        }
         if (gesture.equals("swipe_right")) {
             move(1);
         } else if (gesture.equals("swipe_left")) {
@@ -124,7 +146,10 @@ public class MainFrame extends JFrame {
     }
 
     void move(int step) {
-        if (screen.equals("DATE")) {
+        if (screen.equals("START")) {
+            typeIndex = (typeIndex + step + TYPE_COUNT) % TYPE_COUNT;
+            showStartScreen();
+        } else if (screen.equals("DATE")) {
             dateIndex = (dateIndex + step + 3) % 3;
             showDateScreen();
         } else if (screen.equals("TIME")) {
@@ -135,7 +160,12 @@ public class MainFrame extends JFrame {
     }
 
     void confirm() {
-        if (screen.equals("DATE")) {
+        if (screen.equals("START")) {
+            ticket = ContentProvider.getTicket(typeIndex + 1);
+            dateIndex = 0;
+            slotIndex = 0;
+            showDateScreen();
+        } else if (screen.equals("DATE")) {
             slotIndex = 0;
             showTimeScreen();
         } else if (screen.equals("TIME")) {
@@ -150,12 +180,39 @@ public class MainFrame extends JFrame {
     void goToStart() {
         stopTimer();
         ticket = null;
+        typeIndex = 0;
+        showStartScreen();
+    }
+
+    void showStartScreen() {
+        String text = "<html><center>Welcome to the museum<br><br>Choose your ticket type<br><br>";
+        for (int i = 0; i < TYPE_COUNT; i++) {
+            String name = ContentProvider.getTicket(i + 1).name;
+            if (i == typeIndex) {
+                text += "<font color='blue'>&gt; " + name + " &lt;</font><br>";
+            } else {
+                text += name + "<br>";
+            }
+        }
+        text += "<br><font size='5'>Swipe to change - Raise your hand to confirm</font>";
+        if (cameraProblem != null) {
+            String safe = cameraProblem.replace("&", "&amp;").replace("<", "&lt;");
+            text += "<br><br><div style='width:700px'><font size='5' color='red'>Camera problem: " + safe
+                    + "<br>You can still use the arrow keys and Enter.</font></div>";
+        } else if (!cameraReady) {
+            text += "<br><br><font size='5' color='gray'>Starting camera...</font>";
+        }
+        text += "</center></html>";
+        startLabel.setText(text);
         show("START");
     }
 
     void show(String name) {
         screen = name;
         cards.show(root, name);
+        if (CameraManager.instance != null && !name.equals("ERROR")) {
+            CameraManager.instance.onScreen(name);
+        }
     }
 
     void stopTimer() {
@@ -211,6 +268,9 @@ public class MainFrame extends JFrame {
                 + date + " at " + time + "<br><br>Ticket code: <font color='blue'>" + code + "</font></center></html>");
 
         saveTicket(code, date, time);
+        if (ScanStation.instance != null) {
+            ScanStation.instance.ticketPrinted(code, ticket.name);
+        }
         show("SUMMARY");
 
         stopTimer();
